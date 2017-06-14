@@ -586,13 +586,22 @@ void ws2811_fini(ws2811_t *ws2811)
  */
 int ws2811_wait(ws2811_t *ws2811)
 {
+    int waitCount = 0;
+    int maxWaitCount = 10;
+   
     volatile dma_t *dma = ws2811->device->dma;
 
     while ((dma->cs & RPI_DMA_CS_ACTIVE) &&
-           !(dma->cs & RPI_DMA_CS_ERROR))
+           !(dma->cs & RPI_DMA_CS_ERROR) && (waitCount <= maxWaitCount)
     {
         usleep(10);
+        waitCount++;
     }
+           
+    if (waitCount >= maxWaitCount)
+    {
+      return -1;
+    }         
 
     if (dma->cs & RPI_DMA_CS_ERROR)
     {
